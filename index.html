@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Notlarım</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    max-width: 700px;
+    margin: 2rem auto;
+    padding: 1rem;
+    background: var(--bg-color);
+    color: var(--text-color);
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+  h1 {
+    text-align: center;
+    margin-bottom: 1rem;
+  }
+  label {
+    font-weight: bold;
+    display: block;
+    margin-top: 1rem;
+    margin-bottom: 0.3rem;
+  }
+  input[type="text"], input[type="password"], textarea, #searchInput {
+    width: 100%;
+    padding: 0.5rem;
+    font-size: 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    box-sizing: border-box;
+    resize: vertical;
+    background: var(--input-bg);
+    color: var(--text-color);
+  }
+  textarea {
+    height: 100px;
+  }
+  button {
+    margin-top: 0.7rem;
+    padding: 0.5rem 1.2rem;
+    font-size: 1rem;
+    cursor: pointer;
+    border-radius: 5px;
+    border: none;
+    color: white;
+    transition: background-color 0.3s ease;
+  }
+  button:hover {
+    opacity: 0.85;
+  }
+  #saveBtn {
+    background-color: #007bff;
+  }
+  #updateBtn {
+    background-color: #ffc107;
+    color: #333;
+  }
+  #cancelEditBtn {
+    background-color: #6c757d;
+  }
+  #exportBtn {
+    background-color: #17a2b8;
+  }
+  #themeToggle {
+    margin-top: 1rem;
+    padding: 0.5rem 1rem;
+    background-color: #28a745;
+    border: none;
+    border-radius: 5px;
+    color: white;
+    cursor: pointer;
+    font-size: 1rem;
+  }
+  #themeToggle:hover {
+    background-color: #1e7e34;
+  }
+  #notesList {
+    list-style: none;
+    padding-left: 0;
+    margin-top: 2rem;
+  }
+  .note-item {
+    background: var(--note-bg);
+    margin-bottom: 1rem;
+    padding: 1rem;
+    border-radius: 7px;
+    box-shadow: var(--note-shadow);
+    position: relative;
+    cursor: pointer;
+  }
+  .note-title {
+    font-weight: bold;
+    font-size: 1.2rem;
+    margin-bottom: 0.5rem;
+    word-break: break-word;
+    color: var(--text-color);
+  }
+  .note-text {
+    white-space: pre-wrap;
+    margin-bottom: 0.8rem;
+    word-break: break-word;
+    color: var(--text-color);
+  }
+  .note-actions {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+  }
+  .note-actions button {
+    background: #dc3545;
+    border: none;
+    color: white;
+    padding: 0.3rem 0.6rem;
+    margin-left: 0.3rem;
+    font-size: 0.9rem;
+    border-radius: 3px;
+    cursor: pointer;
+  }
+  .note-actions button.edit-btn {
+    background: #28a745;
+  }
+  .note-actions button:hover {
+    opacity: 0.8;
+  }
+  .form-row {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .form-row > * {
+    flex-grow: 1;
+    min-width: 150px;
+  }
+  img.note-image-preview {
+    max-width: 100px;
+    max-height: 80px;
+    display: block;
+    margin-top: 0.5rem;
+    border-radius: 5px;
+  }
+
+  /* Light Theme Variables */
+  body.light-theme {
+    --bg-color: #f7f7f7;
+    --text-color: #222;
+    --border-color: #ccc;
+    --input-bg: #fff;
+    --note-bg: #fff;
+    --note-shadow: 0 0 8px rgba(0,0,0,0.1);
+  }
+
+  /* Dark Theme Variables */
+  body.dark-theme {
+    --bg-color: #121212;
+    --text-color: #eee;
+    --border-color: #555;
+    --input-bg: #222;
+    --note-bg: #1e1e1e;
+    --note-shadow: 0 0 10px rgba(0,0,0,0.7);
+  }
+</style>
+</head>
+<body>
+  <h1>Notlarım</h1>
+
+  <label for="titleInput">Başlık</label>
+  <input type="text" id="titleInput" placeholder="Not başlığını yazın" />
+
+  <label for="noteInput">Not</label>
+  <textarea id="noteInput" placeholder="Notunuzu buraya yazın..."></textarea>
+
+  <label for="categoryInput">Kategori / Etiketler (virgülle ayır)</label>
+  <input type="text" id="categoryInput" placeholder="örnek: iş, kişisel, acil" />
+
+  <label for="imageInput">Resim Ekle (opsiyonel)</label>
+  <input type="file" id="imageInput" accept="image/*" />
+  <img id="imagePreview" class="note-image-preview" style="display:none;" alt="Resim önizlemesi" />
+
+  <label for="passwordInput">Şifre (İstersen ekle)</label>
+  <input type="password" id="passwordInput" placeholder="Not için şifre belirleyin (opsiyonel)" />
+
+  <div class="form-row">
+    <button id="saveBtn">Notu Kaydet</button>
+    <button id="updateBtn" style="display:none;">Notu Güncelle</button>
+    <button id="cancelEditBtn" style="display:none;">İptal</button>
+    <button id="exportBtn">Notları Dışa Aktar</button>
+  </div>
+
+  <label for="searchInput">Notlarda Ara</label>
+  <input type="text" id="searchInput" placeholder="Başlık, not veya kategori içinde ara..." />
+
+  <button id="themeToggle">Koyu Tema</button>
+
+  <ul id="notesList"></ul>
+
+<script>
+  const titleInput = document.getElementById('titleInput');
+  const noteInput = document.getElementById('noteInput');
+  const categoryInput = document.getElementById('categoryInput');
+  const imageInput = document.getElementById('imageInput');
+  const imagePreview = document.getElementById('imagePreview');
+  const passwordInput = document.getElementById('passwordInput');
+  const saveBtn = document.getElementById('saveBtn');
+  const updateBtn = document.getElementById('updateBtn');
+  const cancelEditBtn = document.getElementById('cancelEditBtn');
+  const notesList = document.getElementById('notesList');
+  const searchInput = document.getElementById('searchInput');
+  const exportBtn = document.getElementById('exportBtn');
+  const themeToggle = document.getElementById('themeToggle');
+
+  let notes = JSON.parse(localStorage.getItem('notes') || '[]');
+  let editIndex = null;
+  let currentImageData = null;
+
+  // Tema ayarlarını yükle ve uygula
+  function loadTheme() {
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.body.classList.remove('light-theme', 'dark-theme');
+    document.body.classList.add(savedTheme + '-theme');
+    themeToggle.textContent = savedTheme === 'light' ? 'Koyu Tema' : 'Açık Tema';
+  }
+
+  // Tema değiştir
+  themeToggle.addEventListener('click', () => {
+    if (document.body.classList.contains('light-theme')) {
+      document.body.classList.replace('light-theme', 'dark-theme');
+      localStorage.setItem('theme', 'dark');
+      themeToggle.textContent = 'Açık Tema';
+    } else {
+      document.body.classList.replace('dark-theme', 'light-theme');
+      localStorage.setItem('theme', 'light');
+      themeToggle.textContent = 'Koyu Tema';
+    }
+  });
+
+  function renderNotes(filter = '') {
+    notesList.innerHTML = '';
+
+    const filteredNotes = notes.filter(note =>
+      note.title.toLowerCase().includes(filter.toLowerCase()) ||
+      note.text.toLowerCase().includes(filter.toLowerCase()) ||
+      (note.categories && note.categories.some(cat => cat.toLowerCase().includes(filter.toLowerCase())))
+    );
+
+    if (filteredNotes.length === 0) {
+      notesList.innerHTML = '<p style="text-align:center; color:var(--text-color);">Kayıtlı not bulunamadı.</p>';
+      return;
+    }
+
+    filteredNotes.forEach((note, index) => {
+      const li = document.createElement('li');
+      li.className = 'note-item';
+
+      const title = document.createElement('div');
+      title.className = 'note-title';
+      title.textContent = note.title;
+
+      const text = document.createElement('div');
+      text.className = 'note-text';
+
+      if (note.password && !note._unlocked) {
+        text.textContent = '🔒 Bu not şifre korumalıdır. Notu görmek için tıklayın.';
+        li.style.cursor = 'pointer';
+        li.onclick = () => unlockNote(index);
+      } else {
+        text.textContent = note.text;
+        li.style.cursor = 'default';
+        li.onclick = null;
+      }
+
+      // Kategori gösterimi
+      if (note.categories && note.categories.length > 0) {
+        const catDiv = document.createElement('div');
+        catDiv.style.fontStyle = 'italic';
+        catDiv.style.marginTop = '5px';
+        catDiv.style.color = 'var(--text-color)';
+        catDiv.textContent = 'Kategori: ' + note.categories.join(', ');
+        li.appendChild(catDiv);
+      }
+
+      // Resim gösterimi (kilitli değilse)
+      if (note.imageData && (!note.password || note._unlocked)) {
+        const img = document.createElement('img');
+        img.src = note.imageData;
+        img.alt = 'Not resmi';
+        img.style.maxWidth = '200px';
+        img.style.display = 'block';
+        img.style.marginTop = '0.7rem';
+        img.style.borderRadius = '5px';
+        li.appendChild(img);
+      }
+
+      const actions = document.createElement('div');
+      actions.className = 'note-actions';
+
+      const editBtn = document.createElement('button');
+      editBtn.textContent = 'Düzenle';
+      editBtn.className = 'edit-btn';
+      editBtn.onclick = (e) => {
+        e.stopPropagation();
+        startEdit(index);
+      };
+
+      const deleteBtn = document.createElement('button');
+      deleteBtn.textContent = 'Sil';
+      deleteBtn.onclick = (e) => {
+        e.stopPropagation();
+        deleteNote(index);
+      };
+
+      actions.appendChild(editBtn);
+      actions.appendChild(deleteBtn);
+
+      li.appendChild(title);
+      li.appendChild(text);
+      li.appendChild(actions);
+
+      notesList.appendChild(li);
+    });
+  }
+
+  imageInput.addEventListener('change', () => {
+    const file = imageInput.files[0];
+    if (!file) {
+      imagePreview.style.display = 'none';
+      currentImageData = null;
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      currentImageData = e.target.result;
+      imagePreview.src = currentImageData;
+      imagePreview.style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+  });
+
+  function unlockNote(index) {
+    const input = prompt('Bu not şifreli. Lütfen şifreyi girin:');
+    if (input === null) return; // İptal edildi
+
+    if (input === notes[index].password) {
+      notes[index]._unlocked = true;
+      renderNotes(searchInput.value);
+    } else {
+      alert('Şifre yanlış!');
+    }
+  }
+
+  function addNote() {
+    const title = titleInput.value.trim();
+    const text = noteInput.value.trim();
+    const categoriesRaw = categoryInput.value.trim();
+    const password = passwordInput.value.trim();
+
+    if (!title) {
+      alert('Lütfen not başlığını girin.');
+      return;
+    }
+    if (!text) {
+      alert('Lütfen notunuzu yazın.');
+      return;
+    }
+
+    const categories = categoriesRaw ? categoriesRaw.split(',').map(c => c.trim()).filter(c => c) : [];
+
+    notes.push({
+      title,
+      text,
+      categories,
+      imageData: currentImageData || null,
+      password: password || null
+    });
+    saveNotes();
+    clearForm();
+    renderNotes(searchInput.value);
+  }
+
+  function deleteNote(index) {
+    if (confirm('Bu notu silmek istediğinize emin misiniz?')) {
+      notes.splice(index, 1);
+      saveNotes();
+      renderNotes(searchInput.value);
+      if (editIndex === index) cancelEdit();
+    }
+  }
+
+  function startEdit(index) {
+    editIndex = index;
+    const note = notes[index];
+    titleInput.value = note.title;
+    noteInput.value = note.text;
+    categoryInput.value = note.categories ? note.categories.join(', ') : '';
+    passwordInput.value = note.password || '';
+    currentImageData = note.imageData || null;
+
+    if (currentImageData) {
+      imagePreview.src = currentImageData;
+      imagePreview.style.display = 'block';
+    } else {
+      imagePreview.style.display = 'none';
+    }
+
+    saveBtn.style.display = 'none';
+    updateBtn.style.display = 'inline-block';
+    cancelEditBtn.style.display = 'inline-block';
+  }
+
+  function updateNote() {
+    const title = titleInput.value.trim();
+    const text = noteInput.value.trim();
+    const categoriesRaw = categoryInput.value.trim();
+    const password = passwordInput.value.trim();
+
+    if (!title) {
+      alert('Lütfen not başlığını girin.');
+      return;
+    }
+    if (!text) {
+      alert('Lütfen notunuzu yazın.');
+      return;
+    }
+
+    const categories = categoriesRaw ? categoriesRaw.split(',').map(c => c.trim()).filter(c => c) : [];
+
+    notes[editIndex] = {
+      title,
+      text,
+      categories,
+      imageData: currentImageData || null,
+      password: password || null
+    };
+    saveNotes();
+    clearForm();
+    renderNotes(searchInput.value);
+    cancelEdit();
+  }
+
+  function cancelEdit() {
+    editIndex = null;
+    clearForm();
+    saveBtn.style.display = 'inline-block';
+    updateBtn.style.display = 'none';
+    cancelEditBtn.style.display = 'none';
+    imagePreview.style.display = 'none';
+    currentImageData = null;
+  }
+
+  function clearForm() {
+    titleInput.value = '';
+    noteInput.value = '';
+    categoryInput.value = '';
+    passwordInput.value = '';
+    imageInput.value = '';
+  }
+
+  function saveNotes() {
+    // _unlocked bilgisini localstorage'a kaydetmiyoruz
+    const notesToSave = notes.map(({title, text, categories, imageData, password}) => ({
+      title, text, categories, imageData, password
+    }));
+    localStorage.setItem('notes', JSON.stringify(notesToSave));
+  }
+
+  searchInput.addEventListener('input', () => {
+    renderNotes(searchInput.value);
+  });
+
+  saveBtn.addEventListener('click', addNote);
+  updateBtn.addEventListener('click', updateNote);
+  cancelEditBtn.addEventListener('click', cancelEdit);
+
+  exportBtn.addEventListener('click', () => {
+    if (notes.length === 0) {
+      alert('Dışa aktarılacak not bulunamadı.');
+      return;
+    }
+    const dataStr = JSON.stringify(notes, null, 2);
+    const blob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'notlar.json';
+    a.click();
+
+    URL.revokeObjectURL(url);
+  });
+
+  // Sayfa yüklendiğinde
+  loadTheme();
+  renderNotes();
+</script>
+</body>
+</html>
